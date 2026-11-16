@@ -6,5 +6,4 @@ def counter(n, i):
         print(i)
         outputted.append(i)
         
-
     return outputted
