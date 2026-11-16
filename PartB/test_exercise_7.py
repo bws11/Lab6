@@ -2,6 +2,7 @@ import pytest
 from exercise_7 import counter
 
 def test_counter():
-    assert counter(10, 0) == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    assert counter(10, 1) == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    assert counter(15, 2) == [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
 pytest.main()
