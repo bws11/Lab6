@@ -18,23 +18,28 @@
 
 import requests, random
 
-def get_random_word() -> str:
-    response = requests.get("https://random-word-api.herokuapp.com/word?number=1")
-    return response.json()[0]
-
 BEST_SCORE: int = -1
+CURRENT_SCORE: int = 0
+
 ROUNDS_COMPLETED: int = 0
 ROUNDS_WON: int = 0
 ROUNDS_LOST: int = 0
-CURRENT_WORD: str = get_random_word()
+
+CURRENT_WORD: str = ""
 REMAINING_GUESSES: int = 0
+
+MAX_HINTS: int = 0
+HINTS_USED: int = 0
 LETTERS_INDEXES_GIVEN_AS_HINTS: list = []
 
 def start_game(new_game: bool = True):
-    global CURRENT_WORD, REMAINING_GUESSES, LETTERS_INDEXES_GIVEN_AS_HINTS
+    global CURRENT_WORD, MAX_HINTS, LETTERS_INDEXES_GIVEN_AS_HINTS, HINTS_USED, REMAINING_GUESSES, CURRENT_SCORE
 
     CURRENT_WORD = get_random_word()
-    REMAINING_GUESSES = 5
+    CURRENT_SCORE = 0
+    REMAINING_GUESSES = 0
+    MAX_HINTS = len(CURRENT_WORD)
+    HINTS_USED = 0
     LETTERS_INDEXES_GIVEN_AS_HINTS = []
 
     if new_game == True:
@@ -44,12 +49,54 @@ def start_game(new_game: bool = True):
         ROUNDS_WON: int = 0
         ROUNDS_LOST: int = 0
 
+    # Guessing loop
+    while True:
+        print("\033[2J\033[H", end="")
+        print(f"Remaining guesses: {REMAINING_GUESSES}")
+
+        user_guess = input("Please enter your guess: ")
+        guess_result = guess_word(user_guess)
+
+        if guess_result == True:
+            print("Correct!")
+        else:
+            REMAINING_GUESSES -= 1
+            if HINTS_USED != MAX_HINTS:
+                get_hint()
+
+
+def guess_word(guess: str):
+    global CURRENT_WORD, REMAINING_GUESSES
+    CURRENT_SCORE += 1
+
+    if guess.lower() == CURRENT_WORD.lower():
+        ROUNDS_COMPLETED += 1
+        ROUNDS_WON += 1
+
+        if (CURRENT_SCORE < BEST_SCORE) or (BEST_SCORE != -1):
+            BEST_SCORE = CURRENT_WORD
+
+        return True
+    else:
+
+        return False
+
+
+def get_random_word() -> str:
+    response = requests.get("https://random-word-api.herokuapp.com/word?number=1")
+    return response.json()[0]
+
 
 def main():
     print("\033[2J\033[H", end="") # 'Clear' console
     main_menu()
     print("\033[2J\033[H", end="")
     print("Closing...")
+
+
+def end_screen(outcome: bool):
+    # The victory or loss screen
+    pass
 
 
 def main_menu():
@@ -78,7 +125,7 @@ def main_menu():
                 "\n2. Continue Game"
                 "\n3. Show the Rules"
                 "\n4. Display your stats"
-                "\n4. Quit"
+                "\n5. Quit"
                 "\nEnter your choice: "
             ))
         except ValueError:
@@ -99,10 +146,14 @@ def main_menu():
             show_rules()
 
         elif user_choice == 4:
+            display_stats()
+
+        elif user_choice == 5:
             break
 
 
-
+def display_stats():
+    pass
 
 
 def show_rules():
@@ -111,13 +162,10 @@ def show_rules():
     input(
         "\nHere are the rules:" 
         "\n1. You have 3 guesses" 
-        "\n2. Guess the word and you win" 
+        "\n2. Guess the word and you win"
+        "\n3. Your guesses are not case sensitive" 
         "\nNot many rules... press enter to continue\n" 
     )
-    
-
-def guess_word():
-    pass
 
 
 def get_hint() -> tuple[str, int]:
@@ -127,13 +175,15 @@ def get_hint() -> tuple[str, int]:
     global CURRENT_WORD, LETTERS_INDEXES_GIVEN_AS_HINTS
     word = list(CURRENT_WORD)
 
-    while index not in LETTERS_INDEXES_GIVEN_AS_HINTS:
+    while True:
         index = random.randint(0, len(word))
-        
+        if not (index in LETTERS_INDEXES_GIVEN_AS_HINTS):
+            break
+
     letter = word[index]
     position = index + 1
     return letter, position
 
 
-
-main()
+if __name__ == '__main__':
+    main()
